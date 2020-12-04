@@ -13,8 +13,6 @@
 
 #define GRAVITY_EARTH      9807	//(9.80665f)
 
-struct bma456_data *bma456_data_ptr = NULL;
-
 static const int scale_table[]= {598, 1197, 2394, 4789};
 static const int bw_table[] = { // in mHz
 	781, 1563, 3125, 6250, 12500, 
@@ -317,46 +315,69 @@ static const struct iio_info bma456_info = {
 
 static irqreturn_t bma456_irq(int irq, void *handle)
 {
-	struct bma456_data *data = (struct bma456_data *)handle;
+	uint8_t rslt;
 	uint16_t int_status;
-	uint16_t rslt = bma456_read_int_status(&int_status, &data->bma);
-	if (rslt != BMA4_OK) {
-		dev_err(&data->client->dev, "read in status.\n");
-	}
+	struct bma456_data *data = (struct bma456_data *)handle;
 
-	if (int_status & BMA456_STEP_CNTR_INT) {
-		uint32_t step_count = 0;
-		bma456_step_counter_output(&step_count, &data->bma);
-		DBG_FUNC("STEP: 0x%04x, %d", int_status, step_count);
-		data->step_count = step_count;
+	/* Read interrupt status */
+	rslt = bma456_read_int_status(&int_status, &data->bma);
+	bma4_error_codes_print_result("bma456_read_int_status", rslt);
+	if (rslt != BMA4_OK)
+		return IRQ_HANDLED;
+
+	if (int_status & BMA456_ANY_MOT_INT) {
+		//DBG_FUNC("BMA456_ANY_MOT_INT");
+	}
+	if (int_status & BMA456_NO_MOT_INT) {
+		//DBG_FUNC("BMA456_NO_MOT_INT");
+	}
+	if (int_status & BMA456_SINGLE_TAP_INT) {
+		DBG_FUNC("BMA456_SINGLE_TAP_INT");
+	}
+	if (int_status & BMA456_DOUBLE_TAP_INT) {
+		DBG_FUNC("BMA456_DOUBLE_TAP_INT");
 	}
 	if (int_status & BMA456_ACTIVITY_INT) {
-		uint8_t activity = 0;
-		bma456_activity_output(&activity, &data->bma);
-		if (BMA456_USER_STATIONARY == activity) {
-			DBG_FUNC("ACTI: 0x%04x, STATIONARY<%d>", int_status, activity);
-		}
-		else if (BMA456_USER_WALKING == activity) {
-			DBG_FUNC("ACTI: 0x%04x, WALKING<%d>", int_status, activity);
-		}
-		else if (BMA456_USER_RUNNING == activity) {
-			DBG_FUNC("ACTI: 0x%04x, RUNNING<%d>", int_status, activity);
-		}
-		else if (BMA456_STATE_INVALID == activity) {
-			DBG_FUNC("ACTI: 0x%04x, INVALID<%d>", int_status, activity);
+		uint8_t activity_output = 0;
+
+		rslt = bma456_activity_output(&activity_output, &data->bma);
+		bma4_error_codes_print_result("bma456_activity_output status", rslt);
+		if (rslt != BMA4_OK)
+			return IRQ_HANDLED;
+		switch (activity_output)
+        {
+		case BMA456_USER_STATIONARY:
+			DBG_FUNC("BMA456_USER_STATIONARY");
+		break;
+		
+		case BMA456_USER_WALKING:
+			DBG_FUNC("BMA456_USER_WALKING");
+		break;
+		
+		case BMA456_USER_RUNNING:
+			DBG_FUNC("BMA456_USER_RUNNING");
+		break;
+
+		case BMA456_STATE_INVALID:
+			DBG_FUNC("BMA456_STATE_INVALID");
+		break;
+
+		default:
+		break;
 		}
 	}
-	if (int_status & BMA456_WRIST_TILT_INT) {
-		DBG_FUNC("WRIST:0x%04x", int_status);
+	if (int_status & BMA456_STEP_CNTR_INT) {
+		uint32_t step_out = 0;
+		rslt = bma456_step_counter_output(&step_out, &data->bma);
+		bma4_error_codes_print_result("bma456_step_counter_output status", rslt);
+		DBG_FUNC("step_out=%d", step_out);
 	}
-	if (int_status & BMA456_WAKEUP_INT) {
-		DBG_FUNC("WAKEUP:0x%04x", int_status);
-	}
-	if (int_status & BMA456_ANY_NO_MOTION_INT) {
-		//DBG_FUNC("MOTION:0x%04x", int_status);
-	}
-	if (int_status & BMA456_ERROR_INT) {
-		DBG_FUNC("ERROR:0x%04x", int_status);
+	if (int_status & BMA4_ACCEL_DATA_RDY_INT) {
+		struct bma4_accel sens_data = { 0 };
+		rslt = bma4_read_accel_xyz(&sens_data, &data->bma);
+      	if (rslt == BMA4_OK) {
+			//DBG_FUNC("x=%d,y=%d,z=%d", sens_data.x, sens_data.y, sens_data.z);
+		}
 	}
 
 	return IRQ_HANDLED;
@@ -376,26 +397,151 @@ static void work_cb_irq(struct work_struct *work)
 }
 
 /* apis */
-static uint16_t bma_i2c_read(uint8_t addr, uint8_t reg, uint8_t* data, uint16_t len)
+#if 1
+static BMA4_INTF_RET_TYPE bma_i2c_read(uint8_t reg_addr, 
+			uint8_t *read_data, uint32_t len, void *intf_ptr)
 {
-	mutex_lock(&bma456_data_ptr->mutex);
-	i2c_smbus_read_i2c_block_data(bma456_data_ptr->client, reg, len, data);
-	mutex_unlock(&bma456_data_ptr->mutex);
+	struct bma456_data *data = (struct bma456_data *)intf_ptr;
+
+	mutex_lock(&data->mutex);
+	i2c_smbus_read_i2c_block_data(data->client, reg_addr, len, read_data);
+	mutex_unlock(&data->mutex);
 	return 0;
 }
 
-static uint16_t bma_i2c_write(uint8_t addr, uint8_t reg, uint8_t* data, uint16_t len)
+static BMA4_INTF_RET_TYPE bma_i2c_write(uint8_t reg_addr, 
+			const uint8_t *write_data, uint32_t len, void *intf_ptr)
 {
-	mutex_lock(&bma456_data_ptr->mutex);
-	i2c_smbus_write_i2c_block_data(bma456_data_ptr->client, reg, len, data);
-	mutex_unlock(&bma456_data_ptr->mutex);
+	struct bma456_data *data = (struct bma456_data *)intf_ptr;
+
+	mutex_lock(&data->mutex);
+	i2c_smbus_write_i2c_block_data(data->client, reg_addr, len, write_data);
+	mutex_unlock(&data->mutex);
 	return 0;
 }
 
-static void bma_delay_ms(uint32_t ms)
+static void bma_delay_us(uint32_t period, void *intf_ptr)
 {
-	msleep(ms);	
+	uint32_t ms = period/1000;
+	uint32_t us = period%1000;
+
+	if (ms)
+		msleep(ms);
+	if (us)
+		udelay(us);
 }
+
+static void set_accel_config(struct bma4_dev *bma)
+{
+	int8_t rslt = 0;
+	struct bma4_accel_config accel_conf = { 0 };
+	/* Accelerometer configuration settings */
+	/* Output data Rate */
+	accel_conf.odr = BMA4_OUTPUT_DATA_RATE_200HZ;
+
+	/* Gravity range of the sensor (+/- 2G, 4G, 8G, 16G) */
+	accel_conf.range = BMA4_ACCEL_RANGE_2G;
+
+	/* The bandwidth parameter is used to configure the number of sensor samples that are averaged
+		if it is set to 2, then 2^(bandwidth parameter) samples
+		are averaged, resulting in 4 averaged samples
+		Note1 : For more information, refer the datasheet.
+		Note2 : A higher number of averaged samples will result in a less noisier signal, but
+		this has an adverse effect on the power consumed.
+	*/
+	accel_conf.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
+
+	/* Enable the filter performance mode where averaging of samples
+		will be done based on above set bandwidth and ODR.
+		There are two modes
+		0 -> Averaging samples (Default)
+		1 -> No averaging
+		For more info on No Averaging mode refer datasheet.
+	*/
+	accel_conf.perf_mode = BMA4_CIC_AVG_MODE;
+
+	/* Set the accel configurations */
+	rslt = bma4_set_accel_config(&accel_conf, bma);
+	bma4_error_codes_print_result("bma4_set_accel_enable status", rslt);
+}
+
+
+/*! Structure to define any/no-motion configurations */
+struct bma456_any_no_mot_config any_no_mot = { 0 };
+
+/*!
+    @brief This internal API is used to get any/no-motion configurations.
+*/
+int8_t get_any_no_mot_config(struct bma4_dev *bma)
+{
+	/* Variable to store the status of API */
+	int8_t rslt;
+
+	/* Getting any-motion configuration to get default configuration */
+	rslt = bma456_get_any_mot_config(&any_no_mot, bma);
+	bma4_error_codes_print_result("bma456_get_any_mot_config status", rslt);
+
+	if (rslt == BMA4_OK)
+	{
+		/*
+			Set the slope threshold:
+			Interrupt will be generated if the slope of all the axis exceeds the threshold (1 bit = 0.48mG)
+		*/
+		any_no_mot.threshold = 10;
+
+		/*
+			Set the duration for any-motion interrupt:
+			Duration defines the number of consecutive data points for which threshold condition must be true(1
+			bit =
+			20ms)
+		*/
+		any_no_mot.duration = 4;
+
+		/* Enabling X, Y, and Z axis for Any-motion feature */
+		any_no_mot.axes_en = BMA456_EN_ALL_AXIS;
+
+		/* Like threshold and duration, we can also change the config of int_bhvr and slope */
+
+		/* Set the threshold and duration configuration */
+		rslt = bma456_set_any_mot_config(&any_no_mot, bma);
+		bma4_error_codes_print_result("bma456_set_any_mot_config status", rslt);
+
+		if (rslt == BMA4_OK)
+		{
+			/* Getting no-motion configuration to get default configuration */
+			rslt = bma456_get_no_mot_config(&any_no_mot, bma);
+			bma4_error_codes_print_result("bma456_get_no_mot_config status", rslt);
+
+			if (rslt == BMA4_OK)
+			{
+				/*
+					Set the slope threshold:
+					Interrupt will be generated if the slope of all the axis exceeds the threshold (1 bit = 0.48mG)
+				*/
+				any_no_mot.threshold = 10;
+
+				/*
+					Set the duration for no-motion interrupt:
+					Duration defines the number of consecutive data points for which threshold condition must be
+					true(1 bit = 20ms)
+				*/
+				any_no_mot.duration = 4;
+
+				/* Enabling X, Y, and Z axis for no-motion feature */
+				any_no_mot.axes_en = BMA456_EN_ALL_AXIS;
+
+				/* Like threshold and duration, we can also change the config of int_bhvr */
+
+				/* Set the threshold and duration configuration */
+				rslt = bma456_set_no_mot_config(&any_no_mot, bma);
+				bma4_error_codes_print_result("bma456_set_no_mot_config status", rslt);
+			}
+		}
+	}
+
+	return rslt;
+}
+#endif
 
 /* probe */
 static int bma456_probe(struct i2c_client *client, 
@@ -403,91 +549,89 @@ static int bma456_probe(struct i2c_client *client,
 {
 	struct bma456_data *data;
 	struct iio_dev *indio_dev;
-	int8_t ret = 0;
+	int ret = 0;
+	int8_t rslt = 0;
 
-	DBG_FUNC("\n");
+	DBG_FUNC("");
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "check I2C_FUNC_I2C\n");
 		return -EOPNOTSUPP;
 	}
 
-	/* iio_dev: create */
+	/* iio_dev: alloc */
 	indio_dev = devm_iio_device_alloc(&client->dev, sizeof(*data));
 	if (!indio_dev)
 		return -ENOMEM;
 	data = iio_priv(indio_dev);
 	i2c_set_clientdata(client, indio_dev);
 	data->client = client;
-	bma456_data_ptr = data;
-	ret = iio_read_mount_matrix(&client->dev, "mount-matrix", &data->orientation);
-	if (ret < 0)
-		return ret;
 	mutex_init(&data->mutex);
-//	memset(data->buff, 0, 16);
 
 	/* i2c */
-	data->bma.dev_addr        = BMA4_I2C_ADDR_SECONDARY;
-	data->bma.interface       = BMA4_I2C_INTERFACE;
-	data->bma.bus_read        = bma_i2c_read;
-    data->bma.bus_write       = bma_i2c_write;
-    data->bma.delay           = bma_delay_ms;
-    data->bma.read_write_len  = 8;
-    data->bma.resolution      = 16;
-    data->bma.feature_len     = BMA456_FEATURE_SIZE;
-	bma456_init(&data->bma);
+	rslt = bma4_interface_selection(&data->bma);
+	bma4_error_codes_print_result("bma4_interface_selection status", rslt);
+	if (rslt != BMA4_OK)
+		return -ENODEV;
+	data->bma.intf_ptr = (void *)data;
+	data->bma.bus_read = bma_i2c_read;
+	data->bma.bus_write = bma_i2c_write;
+	data->bma.delay_us = bma_delay_us;
 
-	bma4_set_command_register(0xB6, &data->bma); // reset device
-	msleep(500);
-	bma456_write_config_file(&data->bma);
+	rslt = bma4_soft_reset(&data->bma);
+	bma4_error_codes_print_result("bma4_soft_reset status", rslt);
+	if (rslt != BMA4_OK)
+		return -ENODEV;
+	//bma_delay_us(150, NULL);
+	msleep(150);
 
-	data->accel.odr = BMA4_OUTPUT_DATA_RATE_1600HZ;
-    data->accel.range = BMA4_ACCEL_RANGE_4G;
-    data->accel.bandwidth = BMA4_ACCEL_NORMAL_AVG4;
-    data->accel.perf_mode = BMA4_CONTINUOUS_MODE;
-    bma4_set_accel_config(&data->accel, &data->bma);
-	bma4_set_accel_enable(BMA4_ENABLE, &data->bma);
+	/* Sensor initialization */
+	rslt = bma456_init(&data->bma);
+	bma4_error_codes_print_result("bma456_init status", rslt);
+	if (rslt != BMA4_OK)
+		return -ENODEV;
+	DBG_FUNC("chip_id:0x%x", data->bma.chip_id);
 
-	/* iio_dev: register */
-	indio_dev->dev.parent = &client->dev;
-	indio_dev->channels = bma456_channels;
-	indio_dev->num_channels = ARRAY_SIZE(bma456_channels);
-	indio_dev->name = id->name;
-	indio_dev->modes = INDIO_DIRECT_MODE;
-	indio_dev->info = &bma456_info;
-	ret = iio_device_register(indio_dev);
-	if (ret < 0) {
-		dev_err(&client->dev, "unable to register iio device:%d\n", ret);
-		goto err_chip_disable;
+	/* Upload the configuration file to enable the features of the sensor. */
+	rslt = bma456_write_config_file(&data->bma);
+	bma4_error_codes_print_result("bma456_write_config status", rslt);
+
+	/* Enable the accelerometer */
+	rslt = bma4_set_accel_enable(BMA4_ENABLE, &data->bma);
+	bma4_error_codes_print_result("bma4_set_accel_enable status", rslt);
+
+	set_accel_config(&data->bma);
+	/* Map the interrupt 1 for any/no-motion step activity and step counter, single double tap*/
+	rslt = bma456_map_interrupt(BMA4_INTR1_MAP, 
+		(BMA456_ACTIVITY_INT | BMA456_STEP_CNTR_INT | BMA456_ANY_MOT_INT | \
+			BMA456_NO_MOT_INT | BMA456_SINGLE_TAP_INT | BMA456_DOUBLE_TAP_INT), 
+		BMA4_ENABLE, &data->bma);
+	bma4_error_codes_print_result("bma456_map1_interrupt status", rslt);
+
+	/* Mapping data ready interrupt with interrupt pin 2 to get interrupt status once getting new accel data */
+	rslt = bma456_map_interrupt(BMA4_INTR2_MAP, BMA4_DATA_RDY_INT, BMA4_ENABLE, &data->bma);
+	bma4_error_codes_print_result("bma456_map2_interrupt status", rslt);
+
+	/* Setting watermark level 1, the output step resolution is 20 steps.
+	Eg: 1 means, 1 * 20 = 20. Every 20 steps once output triggers
+	*/
+	rslt = bma456_step_counter_set_watermark(1, &data->bma);
+	bma4_error_codes_print_result("bma456_step_counter_set_watermark status", rslt);
+
+	if (rslt == BMA4_OK)
+	{
+		/* Enabling step detector, tap features */
+		rslt = bma456_feature_enable(BMA456_STEP_ACT | BMA456_STEP_CNTR | \
+					BMA456_SINGLE_TAP | BMA456_DOUBLE_TAP, BMA4_ENABLE, &data->bma);
+		bma4_error_codes_print_result("bma456_feature_enable status", rslt);
 	}
 
-	/* feature */
-	data->step_enable = 1;
-	data->step_count = 0; 
-	if (data->step_enable) {
-		bma456_reset_step_counter(&data->bma);
-		bma456_step_detector_enable(BMA4_ENABLE, &data->bma);
-	}
+	/* Get any-motion and no-motion configurations */
+	rslt = get_any_no_mot_config(&data->bma);
+	bma4_error_codes_print_result("get_any_no_mot_config status", rslt);
 
-	/* irq */
-	ret = bma456_map_interrupt(BMA4_INTR1_MAP, BMA4_DATA_RDY_INT
-				| BMA456_STEP_CNTR_INT | BMA456_ACTIVITY_INT | BMA456_WRIST_TILT_INT 
-				| BMA456_WAKEUP_INT | BMA456_ANY_NO_MOTION_INT
-				/*| (BMA456_SINGLE_TAP_INT | BMA456_DOUBLE_TAP_INT)*/,
-				BMA4_ENABLE, &data->bma);
-    if (BMA4_OK != ret) {
-		dev_err(&client->dev, "bma456_map_interrupt:%d\n", ret);
-		goto err_chip_disable;
-	}
-	bma456_anymotion_enable_axis(BMA456_ALL_AXIS_EN, &data->bma);
-	ret = bma456_feature_enable(BMA456_STEP_CNTR /*| BMA456_WAKEUP*/
-			| BMA456_ACTIVITY /*| BMA456_WRIST_TILT | BMA456_ANY_MOTION*/
-			/*| (BMA456_SINGLE_TAP | BMA456_DOUBLE_TAP)*/,
-			BMA4_ENABLE, &data->bma);
-	if (BMA4_OK != ret) {
-		dev_err(&client->dev, "feature STEP_CNTR:%d\n", ret);
-		goto err_chip_disable;
-	}
+	bma456_single_tap_set_sensitivity(0x00, &data->bma);
+	bma456_double_tap_set_sensitivity(0x00, &data->bma);
 
 	if (client->irq) {
 		ret = devm_request_threaded_irq(&client->dev, client->irq, 
@@ -505,7 +649,24 @@ static int bma456_probe(struct i2c_client *client,
 		INIT_DELAYED_WORK(&data->work_irq, work_cb_irq);
 		schedule_delayed_work(&data->work_irq, 0);
 	}
-	DBG_FUNC("Success:0x%x!", data->bma.chip_id);
+
+	/* iio_dev: register */
+	ret = iio_read_mount_matrix(&client->dev, "mount-matrix", &data->orientation);
+	if (ret < 0)
+		return ret;
+
+	indio_dev->dev.parent = &client->dev;
+	indio_dev->channels = bma456_channels;
+	indio_dev->num_channels = ARRAY_SIZE(bma456_channels);
+	indio_dev->name = id->name;
+	indio_dev->modes = INDIO_DIRECT_MODE;
+	indio_dev->info = &bma456_info;
+	ret = iio_device_register(indio_dev);
+	if (ret < 0) {
+		dev_err(&client->dev, "unable to register iio device:%d\n", ret);
+		goto err_chip_disable;
+	}
+
 	return 0;
 
 err_chip_disable:

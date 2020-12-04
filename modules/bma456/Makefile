@@ -7,6 +7,7 @@
 
 obj-m := bma456.o
 bma456-objs := bma456_drv.o			\
+			   api/bma4_common.o	\
 			   api/bma4.o			\
 			   api/bma456.o
 
