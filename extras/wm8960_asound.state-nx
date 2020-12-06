@@ -7534,7 +7534,7 @@ state.jetsonxaviernxa {
 	control.560 {
 		iface MIXER
 		name 'ADMAIF1 Mux'
-		value I2S4
+		value I2S5
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -8353,7 +8353,7 @@ state.jetsonxaviernxa {
 	control.573 {
 		iface MIXER
 		name 'I2S4 Mux'
-		value ADMAIF1
+		value None
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -8416,7 +8416,7 @@ state.jetsonxaviernxa {
 	control.574 {
 		iface MIXER
 		name 'I2S5 Mux'
-		value None
+		value ADMAIF1
 		comment {
 			access 'read write'
 			type ENUMERATED
