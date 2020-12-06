@@ -1,27 +1,45 @@
-# Run ReSpeaker 2-Mics Pi HAT/WM8960 on Jetson Nano
+# Run ReSpeaker 2-Mics Pi HAT/WM8960 on Jetson-Nano/Xavier-NX
 
 For Jetson source R32.4.2 or JetPack Image 4.4
 
 ### 1. Clone repo
 ```shell
-	cd; git clone https://github.com/Seeed-Studio/seeed-linux-dtoverlays
+	cd; git clone https://gitlab.com/aivero/public/seeed-linux-dtoverlays.git
+        git checkout -b origin/add_jetson_nx_support
 	cd ~/seeed-linux-dtoverlays
 ```
 
-### 2. Build dtbo & driver
+### 2.1 Build dtbo & driver for Jetson-Nano
 ```shell
 	export CUSTOM_MOD_LIST="jtsn-wm8960"
 	make all_jetsonnano
 ```
 
-### 3. Install driver
+### 2.2 Build dtbo & driver for Xavier-NX
+```shell
+	export CUSTOM_MOD_LIST="jtsn-wm8960"
+	make all_xaviernx
+```
+
+### 3.1 Install driver for Jetson-Nano
 ```shell
 	sudo -E make install_jetsonnano
 ```
 
-### 4. Install dtbo
+### 3.2 Install driver for Xavier-NX
+```shell
+	sudo -E make install_xaviernx
+```
+
+### 4.1 Install dtbo for Jetson-Nano
 ```shell
 	sudo cp overlays/jetsonnano/jetson-seeed-2mic-wm8960.dtbo /boot
+	sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Seeed Voice Card 2MIC"
+```
+
+### 4.2 Install dtbo for Xavier-NX
+```shell
+	sudo cp overlays/xaviernx/xavier-nx-seeed-2mic-wm8960.dtbo /boot
 	sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Seeed Voice Card 2MIC"
 ```
 
@@ -30,14 +48,22 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 	sudo reboot
 ```
 
-### 6. Restore ALSA mixer/widgets setting
+### 6.1 Restore ALSA mixer/widgets setting for Jetson-Nano
 ```shell
 	# must wait a momemnt the time sound card busy after login
 	cd ~/seeed-linux-dtoverlays
 	alsactl -f extras/wm8960_asound.state-jetson-nano restore 1
 ```
 
+### 6.2 Restore ALSA mixer/widgets setting for Xavier-NX
+```shell
+	# must wait a momemnt the time sound card busy after login
+	cd ~/seeed-linux-dtoverlays
+	alsactl -f extras/wm8960_asound.state-xavier-nx restore 1
+```
+
 ### 7. Capture & Playback
 ```shell
 	arecord -D hw:1,0 -f S32_LE -r 48000 -c 2 | aplay -D hw:1,0 -f S32_LE -r 48000 -c 2
 ```
+
