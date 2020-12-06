@@ -11,7 +11,7 @@
 /dts-v1/;
 /plugin/;
 
-#include <dt-bindings/pinctrl/tegra194-jetson-nx.h>
+#include <dt-bindings/pinctrl/tegra194-xavier-nx.h>
 #include <dt-bindings/pinctrl/pinctrl-tegra.h>
 
 / {
