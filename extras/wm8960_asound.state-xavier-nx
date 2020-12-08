@@ -5401,7 +5401,7 @@ state.jetsonxaviernxa {
 	}
 	control.474 {
 		iface MIXER
-		name 'I2S4 Loopback'
+		name 'I2S5 Loopback'
 		value false
 		comment {
 			access 'read write'
@@ -5411,7 +5411,7 @@ state.jetsonxaviernxa {
 	}
 	control.475 {
 		iface MIXER
-		name 'I2S4 input bit format'
+		name 'I2S5 input bit format'
 		value '32'
 		comment {
 			access 'read write'
@@ -5424,7 +5424,7 @@ state.jetsonxaviernxa {
 	}
 	control.476 {
 		iface MIXER
-		name 'I2S4 codec bit format'
+		name 'I2S5 codec bit format'
 		value '32'
 		comment {
 			access 'read write'
@@ -5437,7 +5437,7 @@ state.jetsonxaviernxa {
 	}
 	control.477 {
 		iface MIXER
-		name 'I2S4 fsync width'
+		name 'I2S5 fsync width'
 		value 32
 		comment {
 			access 'read write'
@@ -5448,7 +5448,7 @@ state.jetsonxaviernxa {
 	}
 	control.478 {
 		iface MIXER
-		name 'I2S4 Sample Rate'
+		name 'I2S5 Sample Rate'
 		value 48000
 		comment {
 			access 'read write'
@@ -5459,7 +5459,7 @@ state.jetsonxaviernxa {
 	}
 	control.479 {
 		iface MIXER
-		name 'I2S4 Channels'
+		name 'I2S5 Channels'
 		value 0
 		comment {
 			access 'read write'
@@ -5470,7 +5470,7 @@ state.jetsonxaviernxa {
 	}
 	control.480 {
 		iface MIXER
-		name 'I2S4 BCLK Ratio'
+		name 'I2S5 BCLK Ratio'
 		value 21474838
 		comment {
 			access 'read write'
@@ -5481,7 +5481,7 @@ state.jetsonxaviernxa {
 	}
 	control.481 {
 		iface MIXER
-		name 'I2S4 Capture stereo to mono conv'
+		name 'I2S5 Capture stereo to mono conv'
 		value None
 		comment {
 			access 'read write'
@@ -10221,7 +10221,7 @@ state.jetsonxaviernxa {
 	}
 	control.676 {
 		iface MIXER
-		name 'I2S4 codec frame mode'
+		name 'I2S5 codec frame mode'
 		value i2s
 		comment {
 			access 'read write'
@@ -10237,7 +10237,7 @@ state.jetsonxaviernxa {
 	}
 	control.677 {
 		iface MIXER
-		name 'I2S4 codec master mode'
+		name 'I2S5 codec master mode'
 		value cbs-cfs
 		comment {
 			access 'read write'
