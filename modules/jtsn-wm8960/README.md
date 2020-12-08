@@ -4,8 +4,9 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 
 ### 1. Clone repo
 ```shell
-	cd; git clone https://gitlab.com/aivero/public/seeed-linux-dtoverlays.git
-	cd ~/seeed-linux-dtoverlays
+	cd <your-work-directory>
+        git clone https://gitlab.com/aivero/public/seeed-linux-dtoverlays.git
+	cd seeed-linux-dtoverlays
         git checkout origin/add_jetson_nx_support
 ```
 
@@ -39,7 +40,13 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 
 ### 4.2 Install dtbo for Xavier-NX
 ```shell
-	sudo cp overlays/xaviernx/xavier-nx-seeed-2mic-wm8960.dtbo /boot
+        # Copy one of the following dtbo to /boot/ folder
+        # Note: /boot/ folder should contain only one of following dtbo
+        # For "WM8960-Audio-Codec" Only support:
+	sudo cp overlays/jetsonnano/jetson-seeed-2mic-wm8960.dtbo /boot
+        # For "WM8960-Audio-Codec + SPI-Led" support:
+	sudo cp overlays/xaviernx/xavier-nx-seeed-2mic-wm8960-with-led.dtbo /boot
+
 	sudo /opt/nvidia/jetson-io/config-by-hardware.py -n "Seeed Voice Card 2MIC"
 ```
 
