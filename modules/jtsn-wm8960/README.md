@@ -5,8 +5,8 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 ### 1. Clone repo
 ```shell
 	cd; git clone https://gitlab.com/aivero/public/seeed-linux-dtoverlays.git
-        git checkout -b origin/add_jetson_nx_support
 	cd ~/seeed-linux-dtoverlays
+        git checkout origin/add_jetson_nx_support
 ```
 
 ### 2.1 Build dtbo & driver for Jetson-Nano
