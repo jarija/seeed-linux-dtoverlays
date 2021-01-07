@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: GPL-2.0-only
+/*
+ * Jetson Device-tree overlay for ReSpeaker 2-Mics Pi HAT.
+ * include WM8960 Codec & SPIDEV pinmux
+ *
+ * Copyright (c) 2020 Seeed Technology Co,Ltd - https://www.seeed.cc.
+ * All rights reserved.
+ *
+ */
+#include <jetson-tx2-seeed-2mic-wm8960.dts>
+
+/ {
+	fragment@10 {
+		target = <&pinmux>;
+		__overlay__ {
+			header-40pin-pinmux {
+				pin19 {
+					nvidia,pins = HDR40_PIN19;
+					nvidia,function = "spi4";
+					nvidia,pull = <TEGRA_PIN_PULL_DOWN>;
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+				};
+				pin21 {
+					nvidia,pins =  HDR40_PIN21;
+					nvidia,function = "spi4";
+					nvidia,pull = <TEGRA_PIN_PULL_DOWN>;
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+				};
+				pin23 {
+					nvidia,pins =  HDR40_PIN23;
+					nvidia,function = "spi4";
+					nvidia,pull = <TEGRA_PIN_PULL_DOWN>;
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+				};
+				/* spi3.cs0 */
+				pin24 {
+					nvidia,pins =  HDR40_PIN24;
+					nvidia,function = "spi4";
+					nvidia,pull = <TEGRA_PIN_PULL_UP>;
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+				};
+
+				/* spi3.cs1, uncomment to enable it */
+				/*
+				pin26 {
+					nvidia,pins = HDR40_PIN26;
+					nvidia,function = "spi4";
+					nvidia,pull = <TEGRA_PIN_PULL_UP>;
+					nvidia,tristate = <TEGRA_PIN_DISABLE>;
+					nvidia,enable-input = <TEGRA_PIN_ENABLE>;
+				};
+				*/
+			};
+		};
+	};
+};
+
