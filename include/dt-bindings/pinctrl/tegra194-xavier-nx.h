@@ -32,7 +32,6 @@
 #define HDR40_PIN31	"soc_gpio42_pq6"
 #define HDR40_PIN32	"soc_gpio44_pr0"
 #define HDR40_PIN33	"soc_gpio54_pn1"
-#define HDR40_PIN33	"soc_gpio54_pn1"
 #define HDR40_PIN35	"dap5_fs_pu0"
 #define HDR40_PIN36	"uart1_cts_pr5"
 #define HDR40_PIN37	"spi3_mosi_py2"
