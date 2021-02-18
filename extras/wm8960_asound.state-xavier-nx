@@ -5471,7 +5471,7 @@ state.jetsonxaviernxa {
 	control.480 {
 		iface MIXER
 		name 'I2S5 BCLK Ratio'
-		value 21474838
+		value 0 
 		comment {
 			access 'read write'
 			type INTEGER
