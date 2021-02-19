@@ -5449,7 +5449,7 @@ state.jetsonxaviernxa {
 	control.478 {
 		iface MIXER
 		name 'I2S5 Sample Rate'
-		value 48000
+		value 0
 		comment {
 			access 'read write'
 			type INTEGER
@@ -6439,7 +6439,7 @@ state.jetsonxaviernxa {
 	control.558 {
 		iface MIXER
 		name 'codec-x rate'
-		value '48kHz'
+		value 'None'
 		comment {
 			access 'read write'
 			type ENUMERATED
