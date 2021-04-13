@@ -5412,7 +5412,7 @@ state.jetsonxaviernxa {
 	control.475 {
 		iface MIXER
 		name 'I2S5 input bit format'
-		value '32'
+		value None
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -5425,7 +5425,7 @@ state.jetsonxaviernxa {
 	control.476 {
 		iface MIXER
 		name 'I2S5 codec bit format'
-		value '32'
+		value None
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -5547,8 +5547,8 @@ state.jetsonxaviernxa {
 	control.486 {
 		iface MIXER
 		name 'x Capture Volume'
-		value.0 63
-		value.1 63
+		value.0 10
+		value.1 10
 		comment {
 			access 'read write'
 			type INTEGER
