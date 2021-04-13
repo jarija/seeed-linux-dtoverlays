@@ -73,6 +73,12 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 	# must wait a momemnt the time sound card busy after login
 	cd ~/seeed-linux-dtoverlays
 	alsactl -f extras/wm8960_asound.state-xavier-nx restore 1
+
+        # we have add some issues with mic noise, to reduce the noise
+        # we can try a different alsactl config file, however this has
+        # adverse impact on audio out
+	cd ~/seeed-linux-dtoverlays
+	alsactl -f extras/wm8960_asound.state-xavier-nx-new restore 1
 ```
 
 ### 7. Capture & Playback
