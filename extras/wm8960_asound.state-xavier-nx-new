@@ -5547,8 +5547,8 @@ state.jetsonxaviernxa {
 	control.486 {
 		iface MIXER
 		name 'x Capture Volume'
-		value.0 39
-		value.1 39
+		value.0 10
+		value.1 10
 		comment {
 			access 'read write'
 			type INTEGER
@@ -5686,8 +5686,8 @@ state.jetsonxaviernxa {
 	control.496 {
 		iface MIXER
 		name 'x Headphone Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 103
+		value.1 103
 		comment {
 			access 'read write'
 			type INTEGER
