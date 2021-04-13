@@ -5547,8 +5547,8 @@ state.jetsonxaviernxa {
 	control.486 {
 		iface MIXER
 		name 'x Capture Volume'
-		value.0 10
-		value.1 10
+		value.0 63
+		value.1 63
 		comment {
 			access 'read write'
 			type INTEGER
@@ -6064,7 +6064,7 @@ state.jetsonxaviernxa {
 	control.527 {
 		iface MIXER
 		name 'x DAC Mono Mix'
-		value Stereo
+		value Mono
 		comment {
 			access 'read write'
 			type ENUMERATED
