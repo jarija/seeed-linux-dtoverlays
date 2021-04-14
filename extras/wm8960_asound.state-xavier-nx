@@ -5879,7 +5879,7 @@ state.jetsonxaviernxa {
 	control.512 {
 		iface MIXER
 		name 'x ALC Max Gain'
-		value 3
+		value 1
 		comment {
 			access 'read write'
 			type INTEGER
@@ -5901,7 +5901,7 @@ state.jetsonxaviernxa {
 	control.514 {
 		iface MIXER
 		name 'x ALC Min Gain'
-		value 0
+		value 1
 		comment {
 			access 'read write'
 			type INTEGER
