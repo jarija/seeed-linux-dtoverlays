@@ -5865,7 +5865,7 @@ state.jetsonxaviernxa {
 	control.511 {
 		iface MIXER
 		name 'x ALC Function'
-		value Off
+		value Stereo
 		comment {
 			access 'read write'
 			type ENUMERATED
