@@ -5,7 +5,7 @@ For Jetson source R32.4.2 or JetPack Image 4.4
 ### 1. Clone repo
 ```shell
 	cd <your-work-directory>
-        git clone https://gitlab.com/aivero/public/seeed-linux-dtoverlays.git
+        git clone https://gitlab.com/aivero/public/legacy/seeed-linux-dtoverlays.git
 	cd seeed-linux-dtoverlays
         git checkout origin/add_jetson_nx_support
 ```
